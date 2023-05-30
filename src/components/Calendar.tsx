@@ -68,7 +68,8 @@ function Calendar() {
             .map((event) => ({
                     ...event,
                     start: convertHoursToMinutes(event.start),
-                    end: convertHoursToMinutes(event.start) + event.duration
+                    end: convertHoursToMinutes(event.start) + event.duration,
+                    index: 0
                 })
             )
             .sortBy('start')
@@ -83,11 +84,16 @@ function Calendar() {
      * @param event
      */
     const detectConflict = (event: FormattedEventEntity) => {
-        return events.filter(item => (
-                event.start <= item.start && event.end > item.start
-                || event.start < item.end && event.end >= item.end
-                || event.end - item.start > 0 && event.end - item.start <= item.duration
-            )
+        return events.filter((item, index) => {
+                if (item !== event) {
+                    // Attribuer la position de l'événement par rapport aux autres dans l'ordre chronologique
+                    item.index = index;
+
+                    return (event.start <= item.start && event.end > item.start
+                        || event.start < item.end && event.end >= item.end
+                        || event.end - item.start > 0 && event.end - item.start <= item.duration)
+                }
+            }
         )
     }
 

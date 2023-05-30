@@ -5,7 +5,8 @@ export interface EventProps {
         id: number,
         start: number,
         duration: number
-        end: number
+        end: number,
+        index: number
     },
     calendarDetails: {
         calendarStart: number,
