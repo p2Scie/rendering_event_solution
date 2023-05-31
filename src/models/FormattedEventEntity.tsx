@@ -3,5 +3,6 @@ export interface FormattedEventEntity {
     start: number,
     duration: number,
     end: number,
-    index: number
+    index: number,
+    conflictCount: number
 }

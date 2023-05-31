@@ -47,8 +47,16 @@ function EventItem({eventDetails, calendarDetails, containerDetails, conflict}: 
      */
     const calculateLeftPosition = (): number => {
         // Décale à droite de N événement avant lui
-        const result = conflict.filter(event => event.index < eventDetails.index).length;
-        return result * calculateWidth();
+        const result = conflict.filter(event => {
+            if (eventDetails.conflictCount === 1 && eventDetails.end >= event.end) {
+                return event.index < eventDetails.index && event.conflictCount <= eventDetails.conflictCount
+            }
+
+            return event.index < eventDetails.index
+        });
+        //if(result === 1) return 0;
+        console.log(eventDetails.id, result)
+        return result.length * calculateWidth();
     };
 
     /**

@@ -69,7 +69,8 @@ function Calendar() {
                     ...event,
                     start: convertHoursToMinutes(event.start),
                     end: convertHoursToMinutes(event.start) + event.duration,
-                    index: 0
+                    index: 0,
+                    conflictCount: 0
                 })
             )
             .sortBy('start')
@@ -96,6 +97,12 @@ function Calendar() {
             }
         )
     }
+    const detectConflict2 = () => {
+        events.map(event => {
+            event.conflictCount = detectConflict(event).length;
+        })
+    }
+    detectConflict2()
 
     return (
         <>
