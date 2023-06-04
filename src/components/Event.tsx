@@ -1,6 +1,7 @@
 import {EventProps} from "../models/EventProps";
+import {FormattedEventEntity} from "../models/FormattedEventEntity";
 
-function EventItem({eventDetails, calendarDetails, containerDetails, conflict}: EventProps) {
+function EventItem({eventDetails, calendarDetails, containerDetails, overlappingEvents, detectConflicts}: EventProps) {
     /**
      * Calculer la position 'top' de l'événement
      */
@@ -9,54 +10,68 @@ function EventItem({eventDetails, calendarDetails, containerDetails, conflict}: 
     };
 
     /**
-     * Calculer la largeur de l'événement
+     * Calculer la position 'left' de l'événement
      */
-    const calculateWidth = () => {
-        if (conflict.length === 0) return containerDetails.containerWidth;
-        let conflictCount = 0;
+    const calculateLeftOffset = (): number => {
+        const offset = overlappingEvents.filter((event: FormattedEventEntity) => {
+            const comparedEventConflict = detectConflicts(event);
 
-        if(conflict.length >= 2) {
-            for (let i = 0; i < conflict.length; i++) {
-                const currentEvent = conflict[i];
-
-                for (let j = 0; j < conflict.length; j++) {
-                    const comparedEvent = conflict[j];
-
-                    if (i !== j) {
-                        if(
-                            currentEvent.start <= comparedEvent.start && currentEvent.end > comparedEvent.start
-                            || currentEvent.start < comparedEvent.end && currentEvent.end >= comparedEvent.end
-                            || currentEvent.end - comparedEvent.start > 0 && currentEvent.end - comparedEvent.start <= comparedEvent.duration
-                        ) {
-                            conflictCount++;
-                        }
-                    }
-
-                }
+            // Si l'événement courant n'a qu'un conflit et se termine en dernier
+            if (overlappingEvents.length === 1 && eventDetails.end >= event.end) {
+                // Retourner les événements qui le précèdent et qui ont le même nombre de conflit ou moins
+                return event.index < eventDetails.index && comparedEventConflict.length <= overlappingEvents.length
             }
 
-            if(conflictCount) return (containerDetails.containerWidth / (conflict.length + 1));
-            else return (containerDetails.containerWidth / conflict.length );
-        }
+            // Sinon, retourner uniquement les événements qui le précèdent
+            return event.index < eventDetails.index
+        });
 
-        return (containerDetails.containerWidth / (conflict.length + 1));
+        return offset.length;
     };
 
     /**
-     * Calculer la position 'left' de l'événement
+     * Calculer la largeur de l'événement
      */
-    const calculateLeftPosition = (): number => {
-        // Décale à droite de N événement avant lui
-        const result = conflict.filter(event => {
-            if (eventDetails.conflictCount === 1 && eventDetails.end >= event.end) {
-                return event.index < eventDetails.index && event.conflictCount <= eventDetails.conflictCount
+    const calculateWidth = () => {
+        // Si l'événement courant n'a pas de conflits
+        if (overlappingEvents.length === 0) return containerDetails.containerWidth;
+
+        // Si l'événement courant n'a qu'un conflit
+        if (overlappingEvents.length === 1) {
+            const comparedEvent = overlappingEvents[0];
+
+            // Si l'événement courant commence après et ne partage pas les mêmes conflits
+            if (eventDetails.index > comparedEvent.index && overlappingEvents.length < detectConflicts(comparedEvent).length) {
+                // Diviser la largeur totale de l'écran par le nombre de conflits de l'événement B
+                return containerDetails.containerWidth / detectConflicts(comparedEvent).length;
             }
 
-            return event.index < eventDetails.index
-        });
-        //if(result === 1) return 0;
-        console.log(eventDetails.id, result)
-        return result.length * calculateWidth();
+            // Sinon, diviser la largeur totale de l'écran par 2
+            return containerDetails.containerWidth / 2;
+        }
+
+        // Si l'événement courant à plusieurs conflits
+        if (overlappingEvents.length >= 2) {
+            const sameRelatedConflicts = overlappingEvents.every((item) => {
+                const count = detectConflicts(item).length;
+                return count === overlappingEvents.length
+            });
+
+            const someRelatedConflicts = overlappingEvents.some((item) => {
+                const count = detectConflicts(item).length;
+                return count === overlappingEvents.length
+            });
+
+            // Si l'événement courant partage les mêmes conflits ou au moins un conflit
+            if (sameRelatedConflicts || someRelatedConflicts)
+                // Divise la largeur totale de l'écran par le nombre de conflicts courant + l'événement courant
+                return containerDetails.containerWidth / (overlappingEvents.length + 1);
+
+            // Sinon divise la largeur totale de l'écran par le nombre de conflicts courant
+            return containerDetails.containerWidth / overlappingEvents.length;
+        }
+
+        return containerDetails.containerWidth / (overlappingEvents.length + 1);
     };
 
     /**
@@ -83,7 +98,7 @@ function EventItem({eventDetails, calendarDetails, containerDetails, conflict}: 
                 height: calculateHeight(),
                 width: calculateWidth(),
                 top: calculateTopPosition(),
-                left: calculateLeftPosition()
+                left: calculateLeftOffset() * calculateWidth()
             }}
 
         >{eventDetails.id}</div>

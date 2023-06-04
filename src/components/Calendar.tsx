@@ -6,8 +6,7 @@ import {FormattedEventEntity} from "../models/FormattedEventEntity";
 import EventItem from "./Event";
 
 function Calendar() {
-    const [data, setData] = useState<EventEntity[]>([]);
-    const [events, setEvents] = useState<FormattedEventEntity[]>([]);
+    const [data, setData] = useState<FormattedEventEntity[]>([]);
     const [containerHeight, setContainerHeight] = useState<number>(0);
     const [containerWidth, setContainerWidth] = useState<number>(0);
 
@@ -20,9 +19,6 @@ function Calendar() {
         setContainerHeight(entries[0].contentRect.height);
     });
 
-    useEffect(() => {
-        fetchEvents();
-    }, []);
 
     /**
      * Récupérer les événements du calendrier
@@ -32,7 +28,7 @@ function Calendar() {
             const response = await fetch('src/assets/input.json');
             if (response.status === 200) {
                 const resData: EventEntity[] = await response.json();
-                setData(resData);
+                setData(formatData(resData));
             } else {
                 throw new Error('Error fetching events.');
             }
@@ -41,8 +37,12 @@ function Calendar() {
         }
     }
 
+    useEffect(() => {
+        fetchEvents();
+    }, [fetchEvents]);
+
     /**
-     * Observer l'événement 'resize' du container
+     * Observer l'événement 'resize' du conteneur
      */
     const observeContainerResizeEvent = (): void | null =>
         container && observer.observe(container);
@@ -50,7 +50,6 @@ function Calendar() {
     useEffect(() => {
         observeContainerResizeEvent();
     });
-
 
     /**
      * Convertir les heures en minutes
@@ -70,52 +69,52 @@ function Calendar() {
                     start: convertHoursToMinutes(event.start),
                     end: convertHoursToMinutes(event.start) + event.duration,
                     index: 0,
-                    conflictCount: 0
+                    conflict: 0
                 })
             )
             .sortBy('start')
             .value();
     }
-    useEffect(() => {
-        setEvents(formatData(data));
-    }, [data]);
 
     /**
      * Détecter les conflits pour chaque événement
-     * @param event
+     * @param currentEvent
      */
-    const detectConflict = (event: FormattedEventEntity) => {
-        return events.filter((item, index) => {
-                if (item !== event) {
-                    // Attribuer la position de l'événement par rapport aux autres dans l'ordre chronologique
-                    item.index = index;
+    const detectConflicts = (currentEvent: FormattedEventEntity): FormattedEventEntity[] => {
+        return data.filter((comparedEvent, index) => {
+                const startBeforeOrSimultaneously = currentEvent.start <= comparedEvent.start;
+                const startBeforeComparedEnds = currentEvent.start < comparedEvent.end;
+                const endAfter = currentEvent.end > comparedEvent.start;
+                const endAfterOrSimultaneously = currentEvent.end >= comparedEvent.end;
+                const overlapsComparedAtSomePoint = currentEvent.end - comparedEvent.start > 0 && currentEvent.end - comparedEvent.start <= comparedEvent.duration;
 
-                    return (event.start <= item.start && event.end > item.start
-                        || event.start < item.end && event.end >= item.end
-                        || event.end - item.start > 0 && event.end - item.start <= item.duration)
+                if (comparedEvent !== currentEvent) {
+                    // Récupérer la position de l'événement par rapport aux autres dans l'ordre chronologique
+                    comparedEvent.index = index;
+
+                    return (
+                        startBeforeOrSimultaneously && endAfter
+                        || startBeforeComparedEnds && endAfterOrSimultaneously
+                        || overlapsComparedAtSomePoint
+                    );
                 }
             }
-        )
+        );
     }
-    const detectConflict2 = () => {
-        events.map(event => {
-            event.conflictCount = detectConflict(event).length;
-        })
-    }
-    detectConflict2()
 
     return (
         <>
             <main id="container" style={{position: 'relative'}}>
                 {
-                    events.length > 1 && (
-                        events.map((event, index) => (
+                    data.length && (
+                        data.map((event, index) => (
                             <EventItem
                                 key={'event-' + index}
                                 eventDetails={event}
                                 calendarDetails={{calendarStart, calendarDuration}}
                                 containerDetails={{containerHeight, containerWidth}}
-                                conflict={detectConflict(event)}
+                                overlappingEvents={detectConflicts(event)}
+                                detectConflicts={detectConflicts}
                             />
                         ))
                     )

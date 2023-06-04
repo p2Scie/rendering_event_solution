@@ -1,14 +1,7 @@
 import {FormattedEventEntity} from "./FormattedEventEntity";
 
 export interface EventProps {
-    eventDetails: {
-        id: number,
-        start: number,
-        duration: number
-        end: number,
-        index: number,
-        conflictCount: number
-    },
+    eventDetails: FormattedEventEntity,
     calendarDetails: {
         calendarStart: number,
         calendarDuration: number
@@ -17,5 +10,6 @@ export interface EventProps {
         containerHeight: number,
         containerWidth: number
     },
-    conflict: FormattedEventEntity[]
+    overlappingEvents: FormattedEventEntity[],
+    detectConflicts: any
 }
