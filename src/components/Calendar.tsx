@@ -1,7 +1,6 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useCallback} from "react";
 import {EventEntity} from "../models/EventEntity";
 import {Duration} from "luxon";
-import _ from "lodash";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
 import EventItem from "./Event";
 
@@ -39,7 +38,7 @@ function Calendar() {
 
     useEffect(() => {
         fetchEvents();
-    }, [fetchEvents]);
+    }, []);
 
     /**
      * Observer l'événement 'resize' du conteneur
@@ -55,32 +54,33 @@ function Calendar() {
      * Convertir les heures en minutes
      * @param hours
      */
-    const convertHoursToMinutes = (hours: string): number =>
-        Duration.fromISOTime(hours).as('minutes');
+    const convertHoursToMinutes = useCallback((hours: string): number =>
+        Duration.fromISOTime(hours).as('minutes'), []);
 
     /**
      * Uniformiser et trier les événements dans l'ordre chronologique
      * @param data
      */
-    const formatData = (data: EventEntity[]): FormattedEventEntity[] => {
-        return _.chain(data)
-            .map((event) => ({
-                    ...event,
-                    start: convertHoursToMinutes(event.start),
-                    end: convertHoursToMinutes(event.start) + event.duration,
-                    index: 0,
-                    conflict: 0
-                })
-            )
-            .sortBy('start')
-            .value();
-    }
+    const formatData = useCallback((data: EventEntity[]): FormattedEventEntity[] => {
+        const formattedData = data.map((event) => {
+            const start = convertHoursToMinutes(event.start);
+            const end = start + event.duration;
+            return {
+                ...event,
+                start,
+                end,
+                index: 0
+            };
+        });
+
+        return formattedData.sort((a, b) => a.start - b.start);
+    }, [convertHoursToMinutes]);
 
     /**
      * Détecter les conflits pour chaque événement
      * @param currentEvent
      */
-    const detectConflicts = (currentEvent: FormattedEventEntity): FormattedEventEntity[] => {
+    const detectConflicts = useCallback((currentEvent: FormattedEventEntity): FormattedEventEntity[] => {
         return data.filter((comparedEvent, index) => {
                 const startBeforeOrSimultaneously = currentEvent.start <= comparedEvent.start;
                 const startBeforeComparedEnds = currentEvent.start < comparedEvent.end;
@@ -100,7 +100,7 @@ function Calendar() {
                 }
             }
         );
-    }
+    }, [data])
 
     return (
         <>
