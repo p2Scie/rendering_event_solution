@@ -1,7 +1,7 @@
 import {EventProps} from "../models/EventProps";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
 
-function EventItem({eventDetails, calendarDetails, containerDetails, overlappingEvents, detectConflicts}: EventProps) {
+function Event({eventDetails, calendarDetails, containerDetails, overlappingEvents, detectConflicts}: EventProps) {
     /**
      * Calculer la position 'top' de l'événement
      */
@@ -106,4 +106,4 @@ function EventItem({eventDetails, calendarDetails, containerDetails, overlapping
     )
 }
 
-export default EventItem;
+export default Event;

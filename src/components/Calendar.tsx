@@ -2,10 +2,12 @@ import {useEffect, useState, useCallback} from "react";
 import {EventEntity} from "../models/EventEntity";
 import {Duration} from "luxon";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
-import EventItem from "./Event";
+import Event from "./Event";
+import Spinner from "./Spinner";
 
 function Calendar() {
     const [data, setData] = useState<FormattedEventEntity[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [containerHeight, setContainerHeight] = useState<number>(0);
     const [containerWidth, setContainerWidth] = useState<number>(0);
 
@@ -24,14 +26,17 @@ function Calendar() {
      */
     const fetchEvents = async () => {
         try {
+            setIsLoading(true);
             const response = await fetch('src/assets/input.json');
             if (response.status === 200) {
                 const resData: EventEntity[] = await response.json();
                 setData(formatData(resData));
+                setIsLoading(false);
             } else {
                 throw new Error('Error fetching events.');
             }
         } catch (e) {
+            setIsLoading(false);
             console.error(e);
         }
     }
@@ -102,13 +107,17 @@ function Calendar() {
         );
     }, [data])
 
+    if (isLoading) {
+        return <Spinner />
+    }
+
     return (
         <>
             <main id="container" style={{position: 'relative'}}>
                 {
                     data.length && (
                         data.map((event, index) => (
-                            <EventItem
+                            <Event
                                 key={'event-' + index}
                                 eventDetails={event}
                                 calendarDetails={{calendarStart, calendarDuration}}
