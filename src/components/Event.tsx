@@ -1,5 +1,6 @@
 import {EventProps} from "../models/EventProps";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
+import styled from 'styled-components';
 
 function Event({eventDetails, calendarDetails, containerDetails, overlappingEvents, detectConflicts}: EventProps) {
     /**
@@ -81,29 +82,24 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
         return eventDetails.duration * (containerDetails.containerHeight / calendarDetails.calendarDuration);
     };
 
+    const Div = styled.div`
+      position: absolute;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid crimson;
+      background-color: rgba(237, 20, 61, .1);
+      border-radius: 4px;
+      font-weight: bold;
+      font-family: sans-serif;
+      color: crimson;
+      height: ${calculateHeight}px;
+      width: ${calculateWidth}px;
+      top: ${calculateTopPosition}px;
+      left: ${calculateLeftOffset() * calculateWidth()}px;
+    `
 
-    return (
-        <div
-            id={`${eventDetails.id}`}
-            style={{
-                position: 'absolute',
-                display: 'inline-flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                border: '1px solid crimson',
-                backgroundColor: 'rgba(237, 20, 61, .1)',
-                borderRadius: '4px',
-                fontWeight: 'bold',
-                fontFamily: 'sans-serif',
-                color: 'crimson',
-                height: calculateHeight(),
-                width: calculateWidth(),
-                top: calculateTopPosition(),
-                left: calculateLeftOffset() * calculateWidth()
-            }}
-
-        >{eventDetails.id}</div>
-    )
+    return <Div id={`${eventDetails.id}`}>{eventDetails.id}</Div>
 }
 
 export default Event;
