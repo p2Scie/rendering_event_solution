@@ -84,6 +84,7 @@ function EventItem({eventDetails, calendarDetails, containerDetails, overlapping
 
     return (
         <div
+            id={`${eventDetails.id}`}
             style={{
                 position: 'absolute',
                 display: 'inline-flex',
