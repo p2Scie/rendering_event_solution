@@ -86,9 +86,14 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
     /**
      * Calculer la hauteur de l'événement
      */
-    const calculateHeight = (): number => {
-        return eventDetails.duration * (containerDetails.height / calendarDetails.calendarDuration);
-    };
+    const calculateHeight = useMemo((): number => {
+        const { duration } = eventDetails;
+        const { height } = containerDetails;
+        const { calendarDuration } = calendarDetails;
+
+        const heightRatio = height / calendarDuration;
+        return duration * heightRatio;
+    }, [eventDetails, containerDetails, calendarDetails]);
 
     const Div = styled.div`
       position: absolute;
