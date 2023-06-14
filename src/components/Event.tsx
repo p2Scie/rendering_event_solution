@@ -1,3 +1,4 @@
+import {useMemo} from "react";
 import {EventProps} from "../models/EventProps";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
 import styled from 'styled-components';
@@ -6,9 +7,16 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
     /**
      * Calculer la position 'top' de l'événement
      */
-    const calculateTopPosition = (): number => {
-        return (eventDetails.start - calendarDetails.calendarStart) * (containerDetails.containerHeight / calendarDetails.calendarDuration);
-    };
+    const calculateTopPosition = useMemo((): number => {
+        const { start } = eventDetails;
+        const { calendarStart, calendarDuration } = calendarDetails;
+        const { height } = containerDetails;
+
+        const heightRatio = height / calendarDuration;
+        const topPosition = (start - calendarStart) * heightRatio;
+
+        return topPosition;
+    }, [eventDetails, calendarDetails, containerDetails]);
 
     /**
      * Calculer la position 'left' de l'événement
@@ -35,7 +43,7 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
      */
     const calculateWidth = () => {
         // Si l'événement courant n'a pas de conflits
-        if (overlappingEvents.length === 0) return containerDetails.containerWidth;
+        if (overlappingEvents.length === 0) return containerDetails.width;
 
         // Si l'événement courant n'a qu'un conflit
         if (overlappingEvents.length === 1) {
@@ -44,11 +52,11 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
             // Si l'événement courant commence après et ne partage pas les mêmes conflits
             if (eventDetails.index > comparedEvent.index && overlappingEvents.length < detectConflicts(comparedEvent).length) {
                 // Diviser la largeur totale de l'écran par le nombre de conflits de l'événement B
-                return containerDetails.containerWidth / detectConflicts(comparedEvent).length;
+                return containerDetails.width / detectConflicts(comparedEvent).length;
             }
 
             // Sinon, diviser la largeur totale de l'écran par 2
-            return containerDetails.containerWidth / 2;
+            return containerDetails.width / 2;
         }
 
         // Si l'événement courant à plusieurs conflits
@@ -66,20 +74,20 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
             // Si l'événement courant partage les mêmes conflits ou au moins un conflit
             if (sameRelatedConflicts || someRelatedConflicts)
                 // Divise la largeur totale de l'écran par le nombre de conflicts courant + l'événement courant
-                return containerDetails.containerWidth / (overlappingEvents.length + 1);
+                return containerDetails.width / (overlappingEvents.length + 1);
 
             // Sinon divise la largeur totale de l'écran par le nombre de conflicts courant
-            return containerDetails.containerWidth / overlappingEvents.length;
+            return containerDetails.width / overlappingEvents.length;
         }
 
-        return containerDetails.containerWidth / (overlappingEvents.length + 1);
+        return containerDetails.width / (overlappingEvents.length + 1);
     };
 
     /**
      * Calculer la hauteur de l'événement
      */
     const calculateHeight = (): number => {
-        return eventDetails.duration * (containerDetails.containerHeight / calendarDetails.calendarDuration);
+        return eventDetails.duration * (containerDetails.height / calendarDetails.calendarDuration);
     };
 
     const Div = styled.div`
