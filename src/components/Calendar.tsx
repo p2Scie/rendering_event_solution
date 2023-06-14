@@ -53,7 +53,9 @@ function Calendar() {
 
     useEffect(() => {
         observeContainerResizeEvent();
-    });
+        // Clean up
+        return () => observer.disconnect();
+    }, [observeContainerResizeEvent, observer]);
 
     /**
      * Convertir les heures en minutes
@@ -113,7 +115,7 @@ function Calendar() {
 
     return (
         <>
-            <main id="container" style={{position: 'relative'}}>
+            <main ref={container} id="container" style={{position: 'relative'}}>
                 {
                     data.length && (
                         data.map((event, index) => (
