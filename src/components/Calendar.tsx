@@ -1,30 +1,24 @@
-import {useEffect, useState, useCallback, useRef} from "react";
+import {useEffect, useState, useCallback, useRef, useMemo} from "react";
 import {EventEntity} from "../models/EventEntity";
 import {Duration} from "luxon";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
 import Event from "./Event";
 import Spinner from "./Spinner";
+import useResizeObserver from "use-resize-observer";
 
 function Calendar() {
     const [data, setData] = useState<FormattedEventEntity[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [containerHeight, setContainerHeight] = useState<number>(0);
-    const [containerWidth, setContainerWidth] = useState<number>(0);
-
-    const calendarStart = Duration.fromISOTime('09:00').as('minutes');
-    const calendarEnd = Duration.fromISOTime('21:00').as('minutes');
-    const calendarDuration = calendarEnd - calendarStart;
+    const calendarStart = useMemo(() => Duration.fromISOTime('09:00').as('minutes'), []);
+    const calendarEnd = useMemo(() => Duration.fromISOTime('21:00').as('minutes'), []);
+    const calendarDuration = useMemo(() => calendarEnd - calendarStart, [calendarEnd, calendarStart]);
     const container = useRef<HTMLDivElement>(null);
-    const observer = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        setContainerWidth(entries[0].contentRect.width);
-        setContainerHeight(entries[0].contentRect.height);
-    });
-
+    const { width = 0, height = 0 } = useResizeObserver<HTMLDivElement>({ ref: container });
 
     /**
      * Récupérer les événements du calendrier
      */
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await fetch('src/assets/input.json');
@@ -39,23 +33,11 @@ function Calendar() {
             setIsLoading(false);
             console.error(e);
         }
-    }
+    },[]);
 
     useEffect(() => {
         fetchEvents();
-    }, []);
-
-    /**
-     * Observer l'événement 'resize' du conteneur
-     */
-    const observeContainerResizeEvent = (): void | null =>
-        container.current && observer.observe(container.current);
-
-    useEffect(() => {
-        observeContainerResizeEvent();
-        // Clean up
-        return () => observer.disconnect();
-    }, [observeContainerResizeEvent, observer]);
+    }, [fetchEvents]);
 
     /**
      * Convertir les heures en minutes
@@ -110,7 +92,7 @@ function Calendar() {
     }, [data])
 
     if (isLoading) {
-        return <Spinner />
+        return <Spinner/>
     }
 
     return (
@@ -123,7 +105,7 @@ function Calendar() {
                                 key={'event-' + index}
                                 eventDetails={event}
                                 calendarDetails={{calendarStart, calendarDuration}}
-                                containerDetails={{containerHeight, containerWidth}}
+                                containerDetails={{height, width}}
                                 overlappingEvents={detectConflicts(event)}
                                 detectConflicts={detectConflicts}
                             />
