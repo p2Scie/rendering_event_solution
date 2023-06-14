@@ -1,4 +1,4 @@
-import {useEffect, useState, useCallback} from "react";
+import {useEffect, useState, useCallback, useRef} from "react";
 import {EventEntity} from "../models/EventEntity";
 import {Duration} from "luxon";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
@@ -14,7 +14,7 @@ function Calendar() {
     const calendarStart = Duration.fromISOTime('09:00').as('minutes');
     const calendarEnd = Duration.fromISOTime('21:00').as('minutes');
     const calendarDuration = calendarEnd - calendarStart;
-    const container = document.getElementById('container');
+    const container = useRef<HTMLDivElement>(null);
     const observer = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         setContainerWidth(entries[0].contentRect.width);
         setContainerHeight(entries[0].contentRect.height);
@@ -49,7 +49,7 @@ function Calendar() {
      * Observer l'événement 'resize' du conteneur
      */
     const observeContainerResizeEvent = (): void | null =>
-        container && observer.observe(container);
+        container.current && observer.observe(container.current);
 
     useEffect(() => {
         observeContainerResizeEvent();
