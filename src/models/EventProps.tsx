@@ -7,8 +7,8 @@ export interface EventProps {
         calendarDuration: number
     },
     containerDetails: {
-        containerHeight: number,
-        containerWidth: number
+        height: number,
+        width: number
     },
     overlappingEvents: FormattedEventEntity[],
     detectConflicts: any
