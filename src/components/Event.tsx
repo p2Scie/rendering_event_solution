@@ -112,19 +112,28 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      border: 1px solid crimson;
-      background-color: rgba(237, 20, 61, .1);
+      border: 1px solid #0a5eff;
+      background-color: rgba(10, 94, 255, .1);
       border-radius: 4px;
       font-weight: bold;
       font-family: sans-serif;
-      color: crimson;
+      color: #0a5eff;
       height: ${calculateHeight}px;
       width: ${calculateWidth}px;
       top: ${calculateTopPosition}px;
       left: ${calculateLeftOffset * calculateWidth()}px;
+      @media (min-width: 768px) {
+        color: #fc9b10;
+        background-color: rgba(255, 155, 16, .1);
+        border-color: #fc9b10;
+      }
+      @media (min-width: 992px) {
+        color: crimson;
+        background-color: rgba(237, 20, 61, .1);
+        border-color: crimson;
+      }
     `
-
-    return <Div id={`${eventDetails.id}`}>{eventDetails.id}</Div>
+    return <Div id={`${eventDetails.id}`}><span>{eventDetails.id}</span></Div>
 }
 
 export default Event;
