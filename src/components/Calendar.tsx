@@ -5,15 +5,36 @@ import {FormattedEventEntity} from "../models/FormattedEventEntity";
 import Event from "./Event";
 import Spinner from "./Spinner";
 import useResizeObserver from "use-resize-observer";
+import Timeslots from "./Timeslots.tsx";
+import styled from 'styled-components';
+
+/** Styles **/
+const Main = styled.main`
+  display: flex;
+  padding: 20px;
+`;
+
+const CalendarContainer = styled.div`
+  position: relative;
+  flex: 1 1 auto;
+`;
 
 function Calendar() {
     const [data, setData] = useState<FormattedEventEntity[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const calendarStart = useMemo(() => Duration.fromISOTime('09:00').as('minutes'), []);
-    const calendarEnd = useMemo(() => Duration.fromISOTime('21:00').as('minutes'), []);
-    const calendarDuration = useMemo(() => calendarEnd - calendarStart, [calendarEnd, calendarStart]);
+    const calendarStart = useMemo(() => '09:00', []);
+    const calendarEnd = useMemo(() => '22:00', []);
+
+    /**
+     * Convertir les heures en minutes
+     * @param hours
+     */
+    const convertHoursToMinutes = useCallback((hours: string): number =>
+        Duration.fromISOTime(hours).as('minutes'), []);
+
+    const calendarDuration = useMemo(() => convertHoursToMinutes(calendarEnd) - convertHoursToMinutes(calendarStart), [calendarEnd, calendarStart]);
     const container = useRef<HTMLDivElement>(null);
-    const { width = 0, height = 0 } = useResizeObserver<HTMLDivElement>({ ref: container });
+    const {width = 0, height = 0} = useResizeObserver<HTMLDivElement>({ref: container});
 
     /**
      * Récupérer les événements du calendrier
@@ -33,18 +54,12 @@ function Calendar() {
             setIsLoading(false);
             console.error(e);
         }
-    },[]);
+    }, []);
 
     useEffect(() => {
         fetchEvents();
     }, [fetchEvents]);
 
-    /**
-     * Convertir les heures en minutes
-     * @param hours
-     */
-    const convertHoursToMinutes = useCallback((hours: string): number =>
-        Duration.fromISOTime(hours).as('minutes'), []);
 
     /**
      * Uniformiser et trier les événements dans l'ordre chronologique
@@ -89,30 +104,34 @@ function Calendar() {
                 }
             }
         );
-    }, [data])
+    }, [data]);
 
-    if (isLoading) {
+    if (isLoading && !data) {
         return <Spinner/>
     }
 
     return (
         <>
-            <main ref={container} id="container" style={{position: 'relative'}}>
-                {
-                    data.length && (
-                        data.map((event, index) => (
-                            <Event
-                                key={'event-' + index}
-                                eventDetails={event}
-                                calendarDetails={{calendarStart, calendarDuration}}
-                                containerDetails={{height, width}}
-                                overlappingEvents={detectConflicts(event)}
-                                detectConflicts={detectConflicts}
-                            />
-                        ))
-                    )
-                }
-            </main>
+            <Main >
+                <Timeslots calendarDetails={{calendarStart, calendarEnd}}/>
+                <CalendarContainer ref={container} className="calendar">
+                    {
+                        data && (
+                            data.map((event, index) => (
+                                <Event
+                                    key={'event-' + index}
+                                    eventDetails={event}
+                                    calendarDetails={{calendarStart, calendarDuration}}
+                                    containerDetails={{height, width}}
+                                    overlappingEvents={detectConflicts(event)}
+                                    detectConflicts={detectConflicts}
+                                    convertHoursToMinutes={convertHoursToMinutes}
+                                />
+                            ))
+                        )
+                    }
+                </CalendarContainer>
+            </Main>
         </>
     )
 }

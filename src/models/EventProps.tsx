@@ -3,7 +3,7 @@ import {FormattedEventEntity} from "./FormattedEventEntity";
 export interface EventProps {
     eventDetails: FormattedEventEntity,
     calendarDetails: {
-        calendarStart: number,
+        calendarStart: string,
         calendarDuration: number
     },
     containerDetails: {
@@ -11,5 +11,6 @@ export interface EventProps {
         width: number
     },
     overlappingEvents: FormattedEventEntity[],
-    detectConflicts: any
+    detectConflicts: any,
+    convertHoursToMinutes: any
 }

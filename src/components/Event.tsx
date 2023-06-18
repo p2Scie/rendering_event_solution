@@ -3,17 +3,46 @@ import {EventProps} from "../models/EventProps";
 import {FormattedEventEntity} from "../models/FormattedEventEntity";
 import styled from 'styled-components';
 
-function Event({eventDetails, calendarDetails, containerDetails, overlappingEvents, detectConflicts}: EventProps) {
+/** Styles **/
+const Container = styled.div<{ $height: number; $width: number; $top: number; $leftOffset: number; }>`
+  position: absolute;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #0a5eff;
+  background-color: rgba(10, 94, 255, .1);
+  border-radius: 4px;
+  font-weight: bold;
+  font-family: sans-serif;
+  color: #0a5eff;
+  height: ${props => props.$height}px;
+  width: ${props => props.$width}px;
+  top: ${props => props.$top}px;
+  left: ${props => props.$leftOffset * props.$width}px;
+
+  @media (min-width: 768px) {
+    color: #fc9b10;
+    background-color: rgba(255, 155, 16, .1);
+    border-color: #fc9b10;
+  }
+  @media (min-width: 992px) {
+    color: crimson;
+    background-color: rgba(237, 20, 61, .1);
+    border-color: crimson;
+  }
+`
+
+function Event({eventDetails, calendarDetails, containerDetails, overlappingEvents, detectConflicts, convertHoursToMinutes}: EventProps) {
     /**
      * Calculer la position 'top' de l'événement
      */
     const calculateTopPosition = useMemo((): number => {
-        const { start } = eventDetails;
-        const { calendarStart, calendarDuration } = calendarDetails;
-        const { height } = containerDetails;
+        const {start} = eventDetails;
+        const {calendarStart, calendarDuration} = calendarDetails;
+        const {height} = containerDetails;
 
         const heightRatio = height / calendarDuration;
-        const topPosition = (start - calendarStart) * heightRatio;
+        const topPosition = (start - convertHoursToMinutes(calendarStart)) * heightRatio;
 
         return topPosition;
     }, [eventDetails, calendarDetails, containerDetails]);
@@ -99,41 +128,25 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
      * Calculer la hauteur de l'événement
      */
     const calculateHeight = useMemo((): number => {
-        const { duration } = eventDetails;
-        const { height } = containerDetails;
-        const { calendarDuration } = calendarDetails;
+        const {duration} = eventDetails;
+        const {height} = containerDetails;
+        const {calendarDuration} = calendarDetails;
 
         const heightRatio = height / calendarDuration;
         return duration * heightRatio;
     }, [eventDetails, containerDetails, calendarDetails]);
 
-    const Div = styled.div`
-      position: absolute;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      border: 1px solid #0a5eff;
-      background-color: rgba(10, 94, 255, .1);
-      border-radius: 4px;
-      font-weight: bold;
-      font-family: sans-serif;
-      color: #0a5eff;
-      height: ${calculateHeight}px;
-      width: ${calculateWidth}px;
-      top: ${calculateTopPosition}px;
-      left: ${calculateLeftOffset * calculateWidth()}px;
-      @media (min-width: 768px) {
-        color: #fc9b10;
-        background-color: rgba(255, 155, 16, .1);
-        border-color: #fc9b10;
-      }
-      @media (min-width: 992px) {
-        color: crimson;
-        background-color: rgba(237, 20, 61, .1);
-        border-color: crimson;
-      }
-    `
-    return <Div id={`${eventDetails.id}`}><span>{eventDetails.id}</span></Div>
+    return (
+        <Container
+            id={`${eventDetails.id}`}
+            $height={calculateHeight}
+            $width={calculateWidth()}
+            $top={calculateTopPosition}
+            $leftOffset={calculateLeftOffset}
+        >
+            <span>{eventDetails.id}</span>
+        </Container>
+    )
 }
 
 export default Event;
