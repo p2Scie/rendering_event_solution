@@ -21,22 +21,34 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
     /**
      * Calculer la position 'left' de l'événement
      */
-    const calculateLeftOffset = (): number => {
-        const offset = overlappingEvents.filter((event: FormattedEventEntity) => {
-            const comparedEventConflict = detectConflicts(event);
+    const calculateLeftOffset = useMemo((): number => {
+        const nbConflict = overlappingEvents.length;
+        const {start} = eventDetails;
+        const {end} = eventDetails;
+        const {index} = eventDetails;
 
-            // Si l'événement courant n'a qu'un conflit et se termine en dernier
-            if (overlappingEvents.length === 1 && eventDetails.end >= event.end) {
-                // Retourner les événements qui le précèdent et qui ont le même nombre de conflit ou moins
-                return event.index < eventDetails.index && comparedEventConflict.length <= overlappingEvents.length
+        // Si l'événement courant n'a pas de conflit
+        if (!nbConflict) return 0;
+
+        const offset = overlappingEvents.filter((comparedEvent: FormattedEventEntity) => {
+            const startBefore = comparedEvent.start < start;
+            const startAtSameTime = comparedEvent.start === start;
+            const endAfter = comparedEvent.end > end;
+            const endAtSameTime = comparedEvent.end === end;
+            const placedInFront = comparedEvent.index < index;
+
+            // Si l'événement courant n'a qu'un conflit
+            if (nbConflict === 1) {
+                return (startBefore && endAfter) || (startBefore && endAtSameTime);
             }
 
-            // Sinon, retourner uniquement les événements qui le précèdent
-            return event.index < eventDetails.index
-        });
+            // Si l'événement courant a plusieurs conflits
+            if (startAtSameTime && endAtSameTime) return placedInFront;
+            return (startBefore && endAfter) || (startAtSameTime && endAfter) || startBefore;
+        }).length;
 
-        return offset.length;
-    };
+        return offset;
+    }, [overlappingEvents, eventDetails]);
 
     /**
      * Calculer la largeur de l'événement
@@ -109,7 +121,7 @@ function Event({eventDetails, calendarDetails, containerDetails, overlappingEven
       height: ${calculateHeight}px;
       width: ${calculateWidth}px;
       top: ${calculateTopPosition}px;
-      left: ${calculateLeftOffset() * calculateWidth()}px;
+      left: ${calculateLeftOffset * calculateWidth()}px;
     `
 
     return <Div id={`${eventDetails.id}`}>{eventDetails.id}</Div>
