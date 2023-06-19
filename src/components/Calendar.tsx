@@ -51,8 +51,9 @@ function Calendar() {
                 throw new Error('Error fetching events.');
             }
         } catch (e) {
-            setIsLoading(false);
             console.error(e);
+        } finally {
+            setIsLoading(false);
         }
     }, []);
 
@@ -112,7 +113,7 @@ function Calendar() {
 
     return (
         <>
-            <Main >
+            <Main>
                 <Timeslots calendarDetails={{calendarStart, calendarEnd}}/>
                 <CalendarContainer ref={container} className="calendar">
                     {
